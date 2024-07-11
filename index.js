@@ -1,15 +1,41 @@
 const express = require('express');
+const morgan = require('morgan');
+
 const app = express();
 
+// Middleware to parse JSON body
 app.use(express.json());
 
+// Custom token to log request body
+morgan.token('req-body', (req, res) => JSON.stringify(req.body));
+
+// Middleware to log request time
 const logRequestTime = (req, res, next) => {
 	req.requestTime = new Date();
-	// console.log(`Request recived at: ${req.requestTime}`);
+	console.log(`Request recived at: ${req.requestTime}`);
 	next();
 };
 
+// Middleware to log POST request with req body
+const logPOSTRequest = (req, res, next) => {
+	if (req.method === 'POST') {
+		const customFormat = ':method :url :status :res[content-length] - :response-time ms :req-body';
+		morgan(customFormat)(req, res, next);
+	} else {
+		next();
+	}
+};
+
+app.use(morgan('tiny'));
+
 app.use(logRequestTime);
+app.use(logPOSTRequest);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+	console.error(err.stack);
+	res.status(500).send('Something broke!');
+});
 
 let phoneBook = [
 	{
