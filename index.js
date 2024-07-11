@@ -5,7 +5,7 @@ app.use(express.json());
 
 const logRequestTime = (req, res, next) => {
 	req.requestTime = new Date();
-	console.log(`Request recived at: ${req.requestTime}`);
+	// console.log(`Request recived at: ${req.requestTime}`);
 	next();
 };
 
@@ -62,7 +62,7 @@ app.get('/api/persons/:id', (req, res) => {
 app.delete('/api/persons/:id', (req, res) => {
 	const id = req.params.id;
 	phoneBook = phoneBook.filter((person) => person.id !== id);
-	console.log(phoneBook);
+
 	res.status(204).end();
 });
 
