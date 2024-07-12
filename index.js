@@ -1,7 +1,10 @@
 const express = require('express');
 const morgan = require('morgan');
+const cors = require('cors');
 
 const app = express();
+
+app.use(cors());
 
 // Middleware to parse JSON body
 app.use(express.json());
@@ -12,7 +15,7 @@ morgan.token('req-body', (req, res) => JSON.stringify(req.body));
 // Middleware to log request time
 const logRequestTime = (req, res, next) => {
 	req.requestTime = new Date();
-	console.log(`Request recived at: ${req.requestTime}`);
+	// console.log(`Request recived at: ${req.requestTime}`);
 	next();
 };
 
@@ -30,6 +33,8 @@ app.use(morgan('tiny'));
 
 app.use(logRequestTime);
 app.use(logPOSTRequest);
+
+app.use(express.static('dist'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -124,7 +129,7 @@ app.post('/api/persons', (req, res) => {
 	res.json(person);
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`);
 });
