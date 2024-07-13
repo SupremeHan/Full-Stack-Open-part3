@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const Phonebook = require('./models/phonebook');
 
 const app = express();
 
@@ -76,18 +78,19 @@ app.get('/info', (req, res) => {
 });
 
 app.get('/api/persons', (req, res) => {
-	res.json(phoneBook);
+	Phonebook.find({}).then((result) => {
+		res.json(result);
+	});
 });
 
 app.get('/api/persons/:id', (req, res) => {
-	const id = req.params.id;
-	const person = phoneBook.find((person) => person.id === id);
-
-	if (person) {
-		res.json(person);
-	} else {
-		res.status(404).end();
-	}
+	Phonebook.findById(req.params.id)
+		.then((result) => {
+			res.json(result);
+		})
+		.catch((error) => {
+			res.status(404).end();
+		});
 });
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -96,11 +99,6 @@ app.delete('/api/persons/:id', (req, res) => {
 
 	res.status(204).end();
 });
-
-const generateId = () => {
-	const maxId = phoneBook.length > 0 ? Math.max(...phoneBook.map((n) => Number(n.id))) : 0;
-	return String(maxId + 1);
-};
 
 app.post('/api/persons', (req, res) => {
 	const body = req.body;
@@ -111,25 +109,17 @@ app.post('/api/persons', (req, res) => {
 		});
 	}
 
-	const isNameExsits = phoneBook.some((person) => person.name === body.name);
-	if (isNameExsits) {
-		return res.status(400).json({
-			error: 'name must be unique'
-		});
-	}
-
-	const person = {
-		id: generateId(),
+	const phoneBook = new Phonebook({
 		name: body.name,
 		number: body.number
-	};
+	});
 
-	phoneBook = [...phoneBook, person];
-
-	res.json(person);
+	phoneBook.save().then((savedPhonebook) => {
+		res.json(savedPhonebook);
+	});
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`);
 });

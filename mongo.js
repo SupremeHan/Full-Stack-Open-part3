@@ -25,6 +25,10 @@ const phoneBook = new Phonebook({
 	number: process.argv[4]
 });
 
+// This is just for exercise purpose, so that the both soultions work
+// if you pass the argumetns for name and number it will add a new user
+// if you dont pass anything it will fetch all users
+// by no means it should be done this way
 if (process.argv.length === 3) {
 	Phonebook.find({}).then((result) => {
 		result.forEach((phoneBook) => {
