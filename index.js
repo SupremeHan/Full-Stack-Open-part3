@@ -1,43 +1,44 @@
-require('dotenv').config();
-const express = require('express');
-const morgan = require('morgan');
-const cors = require('cors');
-const Phonebook = require('./models/phonebook');
+require('dotenv').config()
+const express = require('express')
+const morgan = require('morgan')
+const cors = require('cors')
+const Phonebook = require('./models/phonebook')
 
-const app = express();
+const app = express()
 
-app.use(cors());
-app.use(express.static('dist'));
+app.use(cors())
+app.use(express.static('dist'))
 
 // Middleware to parse JSON body
-app.use(express.json());
+app.use(express.json())
 
 // Middleware to log request time
 const logRequestTime = (req, res, next) => {
-	req.requestTime = new Date();
-	// console.log(`Request recived at: ${req.requestTime}`);
-	next();
-};
-app.use(logRequestTime);
+  req.requestTime = new Date()
+  // console.log(`Request recived at: ${req.requestTime}`);
+  next()
+}
+app.use(logRequestTime)
 
 // Custom token to log request body
-morgan.token('req-body', (req, res) => JSON.stringify(req.body));
+// eslint-disable-next-line no-unused-vars
+morgan.token('req-body', (req, res) => JSON.stringify(req.body))
 
 // Middleware to log POST request with req body
 const logPOSTRequest = (req, res, next) => {
-	if (req.method === 'POST') {
-		const customFormat = ':method :url :status :res[content-length] - :response-time ms :req-body';
-		morgan(customFormat)(req, res, next);
-	} else {
-		next();
-	}
-};
-app.use(morgan('tiny'));
-app.use(logPOSTRequest);
+  if (req.method === 'POST') {
+    const customFormat = ':method :url :status :res[content-length] - :response-time ms :req-body'
+    morgan(customFormat)(req, res, next)
+  } else {
+    next()
+  }
+}
+app.use(morgan('tiny'))
+app.use(logPOSTRequest)
 
 const unknownEndpoint = (req, res) => {
-	res.status(404).send({ error: 'unknown endpoint' });
-};
+  res.status(404).send({ error: 'unknown endpoint' })
+}
 
 // let phoneBook = [
 // 	{
@@ -63,100 +64,100 @@ const unknownEndpoint = (req, res) => {
 // ];
 
 app.get('/info', (req, res, next) => {
-	const reqRecivedTime = req.requestTime;
-	Phonebook.find({})
-		.then((phoneBooks) => {
-			res.send(`
+  const reqRecivedTime = req.requestTime
+  Phonebook.find({})
+    .then((phoneBooks) => {
+      res.send(`
 	    <p>Phonebook has info for ${phoneBooks.length} people</p>
 	    <br/>
-	    <p>${reqRecivedTime}</p>`);
-		})
-		.catch((error) => next(error));
-});
+	    <p>${reqRecivedTime}</p>`)
+    })
+    .catch((error) => next(error))
+})
 
 app.get('/api/persons', (req, res, next) => {
-	Phonebook.find({})
-		.then((result) => {
-			res.json(result);
-		})
-		.catch((error) => next(error));
-});
+  Phonebook.find({})
+    .then((result) => {
+      res.json(result)
+    })
+    .catch((error) => next(error))
+})
 
 app.get('/api/persons/:id', (req, res, next) => {
-	Phonebook.findById(req.params.id)
-		.then((phoneBook) => {
-			if (phoneBook) {
-				res.json(phoneBook);
-			} else {
-				res.status(404).end();
-			}
-		})
-		.catch((error) => next(error));
-});
+  Phonebook.findById(req.params.id)
+    .then((phoneBook) => {
+      if (phoneBook) {
+        res.json(phoneBook)
+      } else {
+        res.status(404).end()
+      }
+    })
+    .catch((error) => next(error))
+})
 
 app.delete('/api/persons/:id', (req, res, next) => {
-	Phonebook.findByIdAndDelete(req.params.id)
-		.then((result) => {
-			res.status(204).end();
-		})
-		.catch((error) => next(error));
-});
+  Phonebook.findByIdAndDelete(req.params.id)
+    .then(() => {
+      res.status(204).end()
+    })
+    .catch((error) => next(error))
+})
 
 app.post('/api/persons', (req, res, next) => {
-	const body = req.body;
+  const body = req.body
 
-	if (!body.name || !body.number) {
-		return res.status(400).json({
-			error: 'one of the fields is missing'
-		});
-	}
+  if (!body.name || !body.number) {
+    return res.status(400).json({
+      error: 'one of the fields is missing'
+    })
+  }
 
-	const phoneBook = new Phonebook({
-		name: body.name,
-		number: body.number
-	});
+  const phoneBook = new Phonebook({
+    name: body.name,
+    number: body.number
+  })
 
-	phoneBook
-		.save()
-		.then((savedPhonebook) => {
-			res.json(savedPhonebook);
-		})
-		.catch((error) => next(error));
-});
+  phoneBook
+    .save()
+    .then((savedPhonebook) => {
+      res.json(savedPhonebook)
+    })
+    .catch((error) => next(error))
+})
 
 app.put('/api/persons/:id', (req, res, next) => {
-	const body = req.body;
+  const body = req.body
 
-	const phoneBook = {
-		name: body.name,
-		number: body.number
-	};
-	Phonebook.findByIdAndUpdate(req.params.id, phoneBook, { new: true, runValidators: true, context: 'query' })
-		.then((updatedPhonebook) => {
-			res.json(updatedPhonebook);
-		})
-		.catch((error) => next(error));
-});
+  const phoneBook = {
+    name: body.name,
+    number: body.number
+  }
+  Phonebook.findByIdAndUpdate(req.params.id, phoneBook, { new: true, runValidators: true, context: 'query' })
+    .then((updatedPhonebook) => {
+      res.json(updatedPhonebook)
+    })
+    .catch((error) => next(error))
+})
 
 // handler of requests with unknown endpoint
-app.use(unknownEndpoint);
+app.use(unknownEndpoint)
 
 // Error handling middleware
 const errorHandler = (error, request, response, next) => {
-	console.error(error.message);
+  console.error(error.message)
 
-	if (error.name === 'CastError') {
-		return response.status(400).send({ error: 'malformatted id' });
-	} else if (error.name === 'ValidationError') {
-		return response.status(400).json({ error: error.message });
-	}
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
 
-	next(error);
-};
+  next(error)
+}
 
-app.use(errorHandler);
+app.use(errorHandler)
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT
 app.listen(PORT, () => {
-	console.log(`Server running on port ${PORT}`);
-});
+  console.log(`Server running on port ${PORT}`)
+})
